@@ -1,0 +1,11 @@
+# pastas temporarias
+**/.vscode
+**/__pycache__
+**/storage
+**/temp
+
+# possivel banco de local de teste
+db.sqlite
+
+# configs locais
+instance/config.py

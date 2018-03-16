@@ -1,0 +1,6 @@
+
+# string connection do banco de dados
+SQLALCHEMY_DATABASE_URI = '???'
+
+# configuracoes do JWT
+JWT_SECRET_KEY = '???'
