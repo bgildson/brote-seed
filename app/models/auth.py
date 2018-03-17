@@ -23,3 +23,7 @@ class AuthUsuarioPermissionModel(db.Model):
     auth_tag_id = db.Column(db.Integer, db.ForeignKey('auth_permissions.id'), primary_key=True)
 
     auth_tag = db.relationship('AuthPermissionModel')
+
+    def __init__(self, usuario_id, auth_tag_id):
+        self.usuario_id = usuario_id
+        self.auth_tag_id = auth_tag_id
