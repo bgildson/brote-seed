@@ -10,16 +10,19 @@ from permission import PermissionDeniedException
 # cria blueprint para API
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-# define qual a regra para acesso da api
-authorizations = {
-    'apikey': {
-        'type': 'apiKey',
-        'in': 'header',
-        'name': 'Authorization'
-    }
-}
+# TODO: ajustar para colocar usuario e senha no authorize da doc
 
-api = Api(api_bp, authorizations=authorizations, security=['apikey'])
+# # define qual a regra para acesso da api
+# authorizations = {
+#     'apikey': {
+#         'type': 'apiKey',
+#         'in': 'header',
+#         'name': 'Authorization'
+#     }
+# }
+
+# api = Api(api_bp, authorizations=authorizations, security=['apikey'])
+api = Api(api_bp)
 
 '''
 TODO: adicionar atributo 'action' para retorno dos errorhandler
@@ -51,3 +54,8 @@ def api_error_handler(error):
 
 # registra apis
 from . import metas
+
+
+# encapsula registro do modulo
+def init_app(app):
+    app.register_blueprint(api_bp)

@@ -5,20 +5,23 @@ import os
 from flask import Flask
 from flask_migrate import Migrate
 
-from config import config
 
+CONFIG_NAME_MAPPER = {
+    'development': 'config.DevelopmentConfig',
+    'testing': 'config.TestingConfig',
+    'production': 'config.ProductionConfig',
+    'local': 'local_config.LocalConfig',
+}
 
 def create_app(script_info=None):
     app = Flask(__name__, instance_relative_config=True)
 
     # carrega a configuracao baseado no variavel de ambiente FLASK_CONFIG
     # ou utiliza a configuracao para um ambiente de desenvolvimento
-    config_name = os.environ.get('FLASK_CONFIG', 'development')
+    config_name = os.getenv('FLASK_CONFIG', 'development')
 
     # configuracoes padroes baseadas no ambiente
-    app.config.from_object(config[config_name])
-    # configuracoes especificas locais
-    app.config.from_pyfile('config.py')
+    app.config.from_object(CONFIG_NAME_MAPPER[config_name])
 
     with app.app_context():
         # registra database
@@ -34,9 +37,9 @@ def create_app(script_info=None):
         jwt.init_app(app)
 
         # registra modulos de resources
-        from app.api import api_bp
-        from app.auth import auth_bp
-        app.register_blueprint(auth_bp)
-        app.register_blueprint(api_bp)
+        from app import auth
+        auth.init_app(app)
+        from app import api
+        api.init_app(app)
 
     return app

@@ -7,7 +7,9 @@ from flask import (
 )
 from flask_jwt_extended import (
     create_access_token, create_refresh_token, current_user,
-    jwt_refresh_token_required, jwt_required, JWTManager
+    get_csrf_token, jwt_refresh_token_required, jwt_required,
+    set_refresh_cookies, set_access_cookies, unset_jwt_cookies,
+    JWTManager
 )
 from flask_restplus import Api, Resource
 from marshmallow import fields, Schema
@@ -66,19 +68,20 @@ class LoginResource(Resource):
         usuario = UsuarioModel.autenticate(args['usuario'], args['senha'])
 
         if usuario:
-            res = jsonify({'access_token': create_access_token(usuario) })
-            res.set_cookie(
-                current_app.config['JWT_REFRESH_COOKIE_NAME'],
-                create_refresh_token(usuario),
-                path=current_app.config['JWT_REFRESH_COOKIE_PATH']
-            )
+            # cria tokens
+            access_token = create_access_token(usuario)
+            refresh_token = create_refresh_token(usuario)
+            # resposta com csrf's
+            res = jsonify({
+                'access_csrf': get_csrf_token(access_token),
+                'refresh_csrf': get_csrf_token(refresh_token)
+            })
+            # Set the JWT cookies in the response
+            set_access_cookies(res, access_token)
+            set_refresh_cookies(res, refresh_token)
             return res
-            # return {
-            #     'access_token': create_access_token(usuario),
-            #     'refresh_token': create_refresh_token(usuario)
-            # }, 200, headers
         else:
-            return { 'error': 'Usuário ou Senha incorreto' }, 400
+            return jsonify({'login': False}), 401
 
 
 @auth.route('/fresh-login')
@@ -90,26 +93,24 @@ class FreshLoginResource(Resource):
         usuario = UsuarioModel.autenticate(args['usuario'], args['senha'])
 
         if usuario:
-            return {
-                'access_token': create_access_token(usuario, fresh=True)
-            }, 200
+            access_token = create_access_token(usuario, fresh=True)
+            res = jsonify({
+                'access_csrf': get_csrf_token(access_token)
+            })
+            set_access_cookies(res, access_token)
+            return res
         else:
             return { 'error': 'Usuário ou Senha incorreto' }, 400
 
 
-# @auth.route('/logout')
-# class LogoutResource(Resource):
+@auth.route('/logout')
+class LogoutResource(Resource):
 
-#     @jwt_required
-#     def post(self):
-#         args = login_parser.parse_args()
-
-#         usuario = UsuarioModel.autenticate(args['usuario'], args['senha'])
-
-#         if usuario:
-#             return {}, 200
-#         else:
-#             return { 'error': 'Usuário ou Senha incorreto' }, 400
+    @jwt_required
+    def post(self):
+        res = jsonify({'logout': True})
+        unset_jwt_cookies(res)
+        return res
 
 
 @auth.route('/refresh')
@@ -117,4 +118,14 @@ class RefreshResource(Resource):
 
     @jwt_refresh_token_required
     def post(self):
-        return { 'access_token': create_access_token(identity=current_user) }, 200
+        access_token = create_access_token(current_user)
+        res = jsonify({
+            'access_csrf': get_csrf_token(access_token)
+        })
+        set_access_cookies(res, access_token)
+        return res
+
+
+# encapsula registro do modulo
+def init_app(app):
+    app.register_blueprint(auth_bp)
