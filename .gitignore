@@ -8,4 +8,4 @@
 db.sqlite
 
 # configs locais
-instance/config.py
+config_local.py
