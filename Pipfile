@@ -32,6 +32,8 @@ sqlalchemy = "==1.2.5"
 werkzeug = "==0.14.1"
 wrapt = "==1.10.11"
 flask-migrate = "*"
+gunicorn = "*"
+"psycopg2" = "*"
 
 
 [dev-packages]
